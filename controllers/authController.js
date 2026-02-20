@@ -141,25 +141,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// ---------------- SEED ADMIN (Temporary) ----------------
-exports.seedAdmin = async (req, res) => {
-  try {
-    const existing = await User.findOne({ email: 'admin@example.com' });
-    if (existing) {
-      return res.status(400).send('Admin already exists');
-    }
-
-    const admin = new User({
-      name: 'Admin',
-      email: 'admin@example.com',
-      password: 'admin123',
-      role: 'admin'
-    });
-
-    await admin.save();
-    res.send('Admin created: admin@example.com / admin123');
-  } catch (err) {
-    console.error('Seed error:', err);
-    res.status(500).send('Seed failed: ' + err.message);
-  }
-};
