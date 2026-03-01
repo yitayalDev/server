@@ -125,6 +125,7 @@ exports.createEmployeeAccount = async (req, res) => {
     if (req.file) imagePath = `/upload/${req.file.filename}`;
 
     const employee = new Employee({
+      tenantId: req.user.tenantId,
       user: user._id,
       name,
       email,

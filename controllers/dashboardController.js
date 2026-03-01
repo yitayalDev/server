@@ -2,6 +2,7 @@ const Employee = require('../models/employee');
 const Department = require('../models/department');
 const Leave = require('../models/leave');
 const Salary = require('../models/salary');
+const mongoose = require('mongoose');
 
 exports.getAdminSummary = async (req, res) => {
   try {
@@ -126,8 +127,10 @@ exports.getLeaveAnalytics = async (req, res) => {
  */
 exports.getDepartmentAnalytics = async (req, res) => {
   try {
+    const tenantObjId = new mongoose.Types.ObjectId(req.user.tenantId);
+
     const empByDept = await Employee.aggregate([
-      { $match: { status: 'active', tenantId: req.user.tenantId } },
+      { $match: { status: 'active', tenantId: tenantObjId } },
       { $group: { _id: '$department', employees: { $sum: 1 } } },
       {
         $lookup: {
@@ -140,7 +143,7 @@ exports.getDepartmentAnalytics = async (req, res) => {
       { $unwind: { path: '$dept', preserveNullAndEmpty: true } },
       {
         $project: {
-          department: { $ifNull: ['$dept.dep_name', 'Unknown'] },
+          department: { $ifNull: ['$dept.name', 'Unknown'] },
           employees: 1,
         },
       },
@@ -148,7 +151,7 @@ exports.getDepartmentAnalytics = async (req, res) => {
     ]);
 
     const leaveByDept = await Leave.aggregate([
-      { $match: { tenantId: req.user.tenantId } },
+      { $match: { tenantId: tenantObjId } },
       { $group: { _id: '$department', leaves: { $sum: 1 } } },
       {
         $lookup: {
@@ -159,7 +162,7 @@ exports.getDepartmentAnalytics = async (req, res) => {
         },
       },
       { $unwind: { path: '$dept', preserveNullAndEmpty: true } },
-      { $project: { department: { $ifNull: ['$dept.dep_name', 'Unknown'] }, leaves: 1 } },
+      { $project: { department: { $ifNull: ['$dept.name', 'Unknown'] }, leaves: 1 } },
     ]);
 
     const leaveMap = {};
