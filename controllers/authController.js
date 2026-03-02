@@ -103,7 +103,7 @@ exports.registerAdmin = async (req, res) => {
 // ---------------- CREATE EMPLOYEE (admin only) ----------------
 exports.createEmployeeAccount = async (req, res) => {
   try {
-    const { name, email, password, departmentId, dob, position } = req.body;
+    const { name, email, password, departmentId, dob, position, role, permissions } = req.body;
 
     if (!name || !email || !password || !departmentId || !dob || !position) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -112,11 +112,17 @@ exports.createEmployeeAccount = async (req, res) => {
     const exist = await User.findOne({ email });
     if (exist) return res.status(400).json({ message: 'Email already exists' });
 
+    let parsedPermissions = permissions;
+    if (typeof permissions === 'string') {
+      parsedPermissions = permissions.split(',').filter(p => p.trim() !== '');
+    }
+
     const user = new User({
       name,
       email,
       password,
-      role: 'employee',
+      role: role || 'employee',
+      permissions: parsedPermissions || [],
       tenantId: req.user.tenantId
     });
     await user.save();

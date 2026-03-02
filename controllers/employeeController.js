@@ -124,7 +124,7 @@ const updateEmployee = async (req, res) => {
         const employee = await Employee.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
         if (!employee) return res.status(404).json({ message: 'Employee not found' });
 
-        const { name, email, password, dob, joinDate, departmentId, position, status } = req.body;
+        const { name, email, password, dob, joinDate, departmentId, position, status, role, permissions } = req.body;
 
         if (name) employee.name = name.trim();
         if (email) employee.email = email.trim().toLowerCase();
@@ -134,15 +134,23 @@ const updateEmployee = async (req, res) => {
         if (position) employee.position = position.trim();
         if (status) employee.status = status;
 
-        if (password && password.trim() !== '') {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            employee.password = hashedPassword;
-
-            const user = await User.findById(employee.user);
-            if (user) {
-                user.password = hashedPassword;
-                await user.save();
+        // Update Account Auth Info
+        const user = await User.findById(employee.user);
+        if (user) {
+            if (role) user.role = role;
+            if (permissions) {
+                let parsedPermissions = permissions;
+                if (typeof permissions === 'string') {
+                    parsedPermissions = permissions.split(',').filter(p => p.trim() !== '');
+                }
+                user.permissions = parsedPermissions;
             }
+            if (password && password.trim() !== '') {
+                const hashedPassword = await bcrypt.hash(password, 10);
+                user.password = hashedPassword;
+                employee.password = hashedPassword;
+            }
+            await user.save();
         }
 
         if (req.file) employee.image = `/upload/${req.file.filename}`;
