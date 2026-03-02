@@ -127,7 +127,18 @@ exports.getLeaveAnalytics = async (req, res) => {
  */
 exports.getDepartmentAnalytics = async (req, res) => {
   try {
-    const tenantObjId = new mongoose.Types.ObjectId(req.user.tenantId);
+    if (!req.user || !req.user.tenantId) {
+      console.error('getDepartmentAnalytics: No tenantId found in user object');
+      return res.status(400).json({ message: 'Missing tenant ID' });
+    }
+
+    let tenantObjId;
+    try {
+      tenantObjId = new mongoose.Types.ObjectId(req.user.tenantId);
+    } catch (castErr) {
+      console.error('getDepartmentAnalytics: Invalid tenantId format', req.user.tenantId);
+      return res.status(400).json({ message: 'Invalid tenant ID format' });
+    }
 
     const empByDept = await Employee.aggregate([
       { $match: { status: 'active', tenantId: tenantObjId } },

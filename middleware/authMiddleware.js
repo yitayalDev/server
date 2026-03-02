@@ -30,9 +30,12 @@ exports.protect = async (req, res, next) => {
         if (user.role === 'admin') {
             user.tenantId = user._id; // The Admin is the root of the tenant
         } else if (!user.tenantId) {
-            // Fallback for legacy employees before multi-tenancy was added
-            // We'll need a migration script, but for now we'll log it
             console.warn(`User ${user.email} missing tenantId`);
+        }
+
+        // Ensure tenantId is available as a string for easy use
+        if (user.tenantId) {
+            user.tenantId = user.tenantId.toString();
         }
 
         // 🔥 THIS FIX MAKES LEAVE WORK

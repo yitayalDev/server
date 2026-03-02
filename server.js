@@ -15,7 +15,9 @@ connectDB();
 const app = express();
 
 // Security Headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Rate Limiting
 const limiter = rateLimit({
