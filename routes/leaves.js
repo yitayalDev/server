@@ -6,7 +6,7 @@ const {
   requestLeave,
   updateLeaveStatus
 } = require('../controllers/leaveController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorize, authorizeOrPermission } = require('../middleware/authMiddleware');
 const Leave = require('../models/leave');
 
 // Multer config for file uploads
@@ -82,11 +82,11 @@ router.post(
 /**
  * ADMIN / HR: All leaves
  */
-router.get('/', protect, authorize('admin', 'hr'), getLeaves);
+router.get('/', protect, authorizeOrPermission(['admin'], 'manage_leaves'), getLeaves);
 
 /**
  * ADMIN / HR: Update leave status
  */
-router.put('/:id/status', protect, authorize('admin', 'hr'), updateLeaveStatus);
+router.put('/:id/status', protect, authorizeOrPermission(['admin'], 'manage_leaves'), updateLeaveStatus);
 
 module.exports = router;

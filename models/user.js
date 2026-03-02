@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { getPermissionsForRole } = require('../utils/permissionConfig');
 
 const userSchema = new mongoose.Schema({
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Root admins have no tenantId (or it's themselves)
@@ -24,6 +25,10 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function () {
+  if (this.isModified('role') && (!this.permissions || this.permissions.length === 0)) {
+    this.permissions = getPermissionsForRole(this.role);
+  }
+
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
 });

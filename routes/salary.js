@@ -3,8 +3,8 @@ const { getSalaries, createSalary, getMySalary } = require('../controllers/salar
 const { protect, authorize, authorizeOrPermission } = require('../middleware/authMiddleware');
 
 // Admin routes
-router.get('/', protect, authorizeOrPermission(['admin', 'hr', 'finance'], 'view_salary'), getSalaries);
-router.post('/', protect, authorizeOrPermission(['admin', 'hr', 'finance'], 'manage_salary'), createSalary);
+router.get('/', protect, authorizeOrPermission(['admin'], 'view_salary'), getSalaries);
+router.post('/', protect, authorizeOrPermission(['admin'], 'manage_salary'), createSalary);
 
 // Employee route
 router.get('/my', protect, authorize('employee', 'admin', 'hr', 'finance'), getMySalary);

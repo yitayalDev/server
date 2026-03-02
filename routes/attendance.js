@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorizeOrPermission } = require('../middleware/authMiddleware');
 const {
     checkIn,
     checkOut,
@@ -10,12 +10,12 @@ const {
 } = require('../controllers/attendanceController');
 
 // Employee routes
-router.post('/check-in', protect, authorize('employee'), checkIn);
-router.post('/check-out', protect, authorize('employee'), checkOut);
-router.get('/today', protect, authorize('employee'), getTodayStatus);
-router.get('/my', protect, authorize('employee'), getMyTimesheets);
+router.post('/check-in', protect, checkIn);
+router.post('/check-out', protect, checkOut);
+router.get('/today', protect, getTodayStatus);
+router.get('/my', protect, getMyTimesheets);
 
-// Admin route
-router.get('/', protect, authorize('admin'), getAllAttendance);
+// Admin route (accessible by admin or those with manage_attendance permission)
+router.get('/', protect, authorizeOrPermission(['admin'], 'manage_attendance'), getAllAttendance);
 
 module.exports = router;
