@@ -79,6 +79,8 @@ app.use('/api/settings', protect, checkSubscription, require('./routes/settings'
 app.use('/api/dashboard', protect, checkSubscription, require('./routes/dashboard'));
 app.use('/api/attendance', protect, checkSubscription, require('./routes/attendance'));
 app.use('/api/notices', protect, checkSubscription, require('./routes/noticeRoutes'));
+app.use('/api/assets', protect, checkSubscription, require('./routes/asset'));
+app.use('/api/notifications', protect, require('./routes/notification')); // Notifications don't strictly need sub gating to be visible
 
 // API Health Check
 app.get("/api/health", (req, res) => {

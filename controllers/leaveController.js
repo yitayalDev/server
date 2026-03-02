@@ -1,4 +1,5 @@
 const Leave = require('../models/leave');
+const { sendNotification } = require('./notificationController');
 
 exports.getLeaves = async (req, res) => {
   try {
@@ -66,6 +67,15 @@ exports.updateLeaveStatus = async (req, res) => {
     if (!leave) {
       return res.status(404).json({ message: 'Not found' });
     }
+
+    // Send Notification to Employee
+    await sendNotification({
+      tenantId: req.user.tenantId,
+      recipient: leave.employee,
+      message: `Your leave request has been ${status}.`,
+      type: status === 'approved' ? 'success' : 'warning',
+      link: '/employee-dashboard/leaves'
+    });
 
     res.json(leave);
   } catch (err) {

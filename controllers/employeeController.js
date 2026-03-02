@@ -2,6 +2,7 @@ const Employee = require('../models/employee');
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const { getPlanLimits } = require('../middleware/subscriptionMiddleware');
+const { sendNotification } = require('./notificationController');
 
 // CREATE EMPLOYEE (Admin only)
 const createEmployee = async (req, res) => {
@@ -57,6 +58,15 @@ const createEmployee = async (req, res) => {
 
         user.employee = employee._id;
         await user.save();
+
+        // Send Welcome Notification
+        await sendNotification({
+            tenantId: req.user.tenantId,
+            recipient: user._id,
+            message: `Welcome to ${req.user.companyName || 'the team'}! Your account is ready.`,
+            type: 'success',
+            link: '/employee-dashboard'
+        });
 
         res.status(201).json({ message: 'Employee created successfully', user, employee });
     } catch (err) {

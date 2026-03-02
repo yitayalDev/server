@@ -1,4 +1,6 @@
 const Notice = require('../models/notice');
+const Employee = require('../models/employee');
+const { sendNotification } = require('./notificationController');
 
 const getNotices = async (req, res) => {
     try {
@@ -22,6 +24,21 @@ const createNotice = async (req, res) => {
             isImportant
         });
         const saved = await newNotice.save();
+
+        // Notify all employees in the tenant
+        const employees = await Employee.find({ tenantId: req.user.tenantId }).select('user');
+        for (const emp of employees) {
+            if (emp.user && emp.user.toString() !== req.user._id.toString()) {
+                await sendNotification({
+                    tenantId: req.user.tenantId,
+                    recipient: emp.user,
+                    message: `New Notice: ${title}`,
+                    type: isImportant ? 'warning' : 'info',
+                    link: '/admin/notices' // Or employee equivalent
+                });
+            }
+        }
+
         res.status(201).json(saved);
     } catch (error) {
         res.status(500).json({ message: 'Error creating notice' });
