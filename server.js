@@ -16,7 +16,8 @@ const app = express();
 
 // Security Headers
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false
 }));
 
 // Rate Limiting
@@ -110,23 +111,23 @@ app.get("/api/debug-dist", (req, res) => {
 
 // SPA Fallback: Serve index.html for any other GET requests (for React Router)
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ message: `API route ${req.method} ${req.url} not found.` });
+  // If requesting an asset/image that doesn't exist, don't return index.html (which causes white screen/mime errors)
+  // Instead, return a 404 so the developer can see the missing asset in the console.
+  const isAssetRequest = req.path.includes('.') || req.path.startsWith('/assets/') || req.path.startsWith('/upload/');
+
+  if (req.path.startsWith('/api/') || isAssetRequest) {
+    return res.status(404).json({ message: `Resource ${req.method} ${req.url} not found.` });
   }
 
   const indexPath = path.join(distPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile('index.html', { root: distPath }, (err) => {
-      if (err) {
-        console.error("Error sending file:", err);
-        if (!res.headersSent) {
-          res.status(500).send("Error loading app. Please try again.");
-        }
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error("Error sending index.html:", err);
+      if (!res.headersSent) {
+        res.status(500).send("Error loading app. Please check if frontend is built.");
       }
-    });
-  } else {
-    res.status(404).send(`Frontend build not found at ${indexPath}. Please run build command.`);
-  }
+    }
+  });
 });
 
 // Server
