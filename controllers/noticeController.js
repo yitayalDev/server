@@ -34,7 +34,7 @@ const deleteNotice = async (req, res) => {
         const notice = await Notice.findOne({ _id: id, tenantId: req.user.tenantId });
         if (!notice) return res.status(404).json({ message: 'Notice not found' });
 
-        await Notice.findByIdAndDelete(id);
+        await Notice.findOneAndDelete({ _id: id, tenantId: req.user.tenantId });
         res.json({ message: 'Notice deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting notice' });

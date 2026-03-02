@@ -131,13 +131,10 @@ exports.stripeWebhook = async (req, res) => {
 
     let event;
     try {
-        if (endpointSecret) {
-            event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-        } else {
-            // For local testing without webhook secret configured
-            event = req.body;
-            if (typeof event === 'string') event = JSON.parse(event);
+        if (!endpointSecret) {
+            throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
         }
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
         console.error(`Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);

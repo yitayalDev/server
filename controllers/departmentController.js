@@ -29,8 +29,8 @@ exports.updateDepartment = async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
-    const department = await Department.findByIdAndUpdate(
-      id,
+    const department = await Department.findOneAndUpdate(
+      { _id: id, tenantId: req.user.tenantId },
       { name },
       { new: true }
     );

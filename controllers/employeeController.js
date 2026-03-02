@@ -1,6 +1,7 @@
 const Employee = require('../models/employee');
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const { getPlanLimits } = require('../middleware/subscriptionMiddleware');
 
 // CREATE EMPLOYEE (Admin only)
 const createEmployee = async (req, res) => {
@@ -13,6 +14,17 @@ const createEmployee = async (req, res) => {
 
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'Email already exists' });
+
+        // Enforce Plan Limits
+        const currentCount = await Employee.countDocuments({ tenantId: req.user.tenantId });
+        const limits = getPlanLimits(req.subscription?.plan || 'Starter');
+
+        if (currentCount >= limits.maxEmployees) {
+            return res.status(403).json({
+                message: `Employee limit reached for your ${req.subscription?.plan || 'Starter'} plan (${limits.maxEmployees}). Please upgrade.`,
+                billingUrl: '/admin/billing'
+            });
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 

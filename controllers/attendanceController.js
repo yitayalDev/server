@@ -112,7 +112,7 @@ exports.checkIn = async (req, res) => {
         const ip = getClientIp(req);
 
         const record = await Attendance.findOneAndUpdate(
-            { employee: employee._id, date: today },
+            { employee: employee._id, date: today, tenantId: req.user.tenantId },
             {
                 checkIn: now,
                 status,

@@ -3,12 +3,27 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const { protect } = require('./middleware/authMiddleware');
+const { checkSubscription } = require('./middleware/subscriptionMiddleware');
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use('/api/', limiter);
 
 // Middleware
 const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:5173', 'https://ems-2gho.onrender.com'].filter(Boolean);
@@ -53,15 +68,17 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/departments', require('./routes/department'));
-app.use('/api/employees', require('./routes/employee'));
-app.use('/api/leaves', require('./routes/leaves'));
-app.use('/api/salary', require('./routes/salary'));
-app.use('/api/settings', require('./routes/settings'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/subscription', require('./routes/subscription'));
-app.use('/api/notices', require('./routes/noticeRoutes'));
+
+// Protected & Subscription-Gated Routes
+app.use('/api/departments', protect, checkSubscription, require('./routes/department'));
+app.use('/api/employees', protect, checkSubscription, require('./routes/employee'));
+app.use('/api/leaves', protect, checkSubscription, require('./routes/leaves'));
+app.use('/api/salary', protect, checkSubscription, require('./routes/salary'));
+app.use('/api/settings', protect, checkSubscription, require('./routes/settings'));
+app.use('/api/dashboard', protect, checkSubscription, require('./routes/dashboard'));
+app.use('/api/attendance', protect, checkSubscription, require('./routes/attendance'));
+app.use('/api/notices', protect, checkSubscription, require('./routes/noticeRoutes'));
 
 // API Health Check
 app.get("/api/health", (req, res) => {
