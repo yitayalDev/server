@@ -6,12 +6,25 @@ const mongoose = require('mongoose');
 
 exports.getAdminSummary = async (req, res) => {
   try {
-    const totalEmployees = await Employee.countDocuments({ tenantId: req.user.tenantId });
-    const totalDepartments = await Department.countDocuments({ tenantId: req.user.tenantId });
-    const pendingLeaves = await Leave.countDocuments({ tenantId: req.user.tenantId, status: 'pending' });
+    const tenantId = req.user.tenantId;
+    if (!tenantId) {
+      console.warn('getAdminSummary: No tenantId found in request');
+      return res.status(400).json({ message: 'Missing tenant ID' });
+    }
+
+    const tenantObjId = new mongoose.Types.ObjectId(tenantId);
+
+    const [totalEmployees, totalDepartments, pendingLeaves] = await Promise.all([
+      Employee.countDocuments({ tenantId: tenantObjId }),
+      Department.countDocuments({ tenantId: tenantObjId }),
+      Leave.countDocuments({ tenantId: tenantObjId, status: 'pending' })
+    ]);
+
+    console.log(`Dashboard Stats for ${tenantId}:`, { totalEmployees, totalDepartments, pendingLeaves });
 
     res.json({ totalEmployees, totalDepartments, pendingLeaves });
   } catch (err) {
+    console.error('getAdminSummary Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
