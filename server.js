@@ -46,13 +46,11 @@ app.post('/api/subscription/webhook', express.raw({ type: 'application/json' }),
 
 app.use(express.json());
 
-// Paths - if this file is in /server/server.js, we need to go up to find dist in root
-const rootDir = __dirname.endsWith('server') ? path.join(__dirname, '..') : __dirname;
-const distPath = path.resolve(rootDir, 'dist');
-const uploadDir = path.resolve(rootDir, 'public', 'upload');
+// Paths
+const distPath = path.resolve(__dirname, '..', 'client', 'dist');
+const uploadDir = path.resolve(__dirname, 'public', 'upload');
 
 console.log('Sub-Server starting...');
-console.log('Root dir:', rootDir);
 console.log('Dist path:', distPath);
 
 // Serve Static Files (Frontend Build)
