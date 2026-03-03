@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema({
   // 🔹 Custom Branding (for Admins/Tenants)
   companyLogo: String,
   companyName: String,
+
+  // 🔹 Demo Mode Flag
+  isDemo: { type: Boolean, default: false },
 });
 
 userSchema.pre('save', async function () {

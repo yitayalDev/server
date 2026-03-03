@@ -45,6 +45,7 @@ exports.login = async (req, res) => {
         employeeId: user.employee?._id || null,
         companyLogo: branding.logo,
         companyName: branding.name,
+        isDemo: user.isDemo,
       },
     });
   } catch (err) {
@@ -228,6 +229,54 @@ exports.resetPassword = async (req, res) => {
     res.json({ message: 'Password reset success' });
   } catch (err) {
     console.error('Reset password error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+// ---------------- DEMO LOGIN ----------------
+exports.demoLogin = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const validRoles = ['admin', 'employee', 'hr', 'finance', 'it_admin'];
+
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid demo role' });
+    }
+
+    // Find a demo user with this role
+    let user = await User.findOne({ role, isDemo: true }).populate('employee');
+
+    if (!user) {
+      // If no demo user exists, we might want to return an error or create one (though creation is risky in a controller)
+      return res.status(404).json({ message: `No demo account found for role: ${role}` });
+    }
+
+    const token = generateToken(user._id, user.role);
+
+    let branding = { logo: user.companyLogo, name: user.companyName };
+    if (user.role === 'employee' && user.tenantId) {
+      const admin = await User.findById(user.tenantId);
+      if (admin) {
+        branding.logo = admin.companyLogo;
+        branding.name = admin.companyName;
+      }
+    }
+
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || [],
+        employeeId: user.employee?._id || null,
+        companyLogo: branding.logo,
+        companyName: branding.name,
+        isDemo: true,
+      },
+    });
+  } catch (err) {
+    console.error('Demo login error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

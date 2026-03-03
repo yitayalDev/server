@@ -13,6 +13,7 @@ const upload = require('../middleware/upload');
 
 // Auth routes
 router.post('/login', login);
+router.post('/demo-login', require('../controllers/authController').demoLogin);
 router.post('/register', registerAdmin);
 
 // Forgot / Reset Password

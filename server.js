@@ -6,7 +6,7 @@ const fs = require('fs');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
-const { protect } = require('./middleware/authMiddleware');
+const { protect, restrictDemo } = require('./middleware/authMiddleware');
 const { checkSubscription } = require('./middleware/subscriptionMiddleware');
 
 dotenv.config();
@@ -74,15 +74,16 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/subscription', require('./routes/subscription'));
 
 // Protected & Subscription-Gated Routes
-app.use('/api/departments', protect, checkSubscription, require('./routes/department'));
-app.use('/api/employees', protect, checkSubscription, require('./routes/employee'));
-app.use('/api/leaves', protect, checkSubscription, require('./routes/leaves'));
-app.use('/api/salary', protect, checkSubscription, require('./routes/salary'));
-app.use('/api/settings', protect, checkSubscription, require('./routes/settings'));
-app.use('/api/dashboard', protect, checkSubscription, require('./routes/dashboard'));
-app.use('/api/attendance', protect, checkSubscription, require('./routes/attendance'));
-app.use('/api/notices', protect, checkSubscription, require('./routes/noticeRoutes'));
-app.use('/api/assets', protect, checkSubscription, require('./routes/asset'));
+app.use('/api/departments', protect, checkSubscription, restrictDemo, require('./routes/department'));
+app.use('/api/employees', protect, checkSubscription, restrictDemo, require('./routes/employee'));
+app.use('/api/leaves', protect, checkSubscription, restrictDemo, require('./routes/leaves'));
+app.use('/api/salary', protect, checkSubscription, restrictDemo, require('./routes/salary'));
+app.use('/api/settings', protect, checkSubscription, restrictDemo, require('./routes/settings'));
+app.use('/api/dashboard', protect, checkSubscription, restrictDemo, require('./routes/dashboard'));
+app.use('/api/attendance', protect, checkSubscription, restrictDemo, require('./routes/attendance'));
+app.use('/api/notices', protect, checkSubscription, restrictDemo, require('./routes/noticeRoutes'));
+app.use('/api/assets', protect, checkSubscription, restrictDemo, require('./routes/asset'));
+
 app.use('/api/notifications', protect, require('./routes/notification')); // Notifications don't strictly need sub gating to be visible
 
 // API Health Check

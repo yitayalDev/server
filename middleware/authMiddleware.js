@@ -51,6 +51,20 @@ exports.protect = async (req, res, next) => {
     }
 };
 
+// 🔹 Block destructive actions for Demo Users
+exports.restrictDemo = (req, res, next) => {
+    if (req.user && req.user.isDemo) {
+        // Block POST, PUT, DELETE for demo users
+        if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+            return res.status(403).json({
+                message: 'Action restricted: You are in Demo Mode. Data changes are not allowed for security reasons.',
+                isDemo: true
+            });
+        }
+    }
+    next();
+};
+
 exports.authorize = (...roles) => {
     return (req, res, next) => {
         // Admin always has access
