@@ -9,7 +9,7 @@ const seedDemoUsers = async () => {
         const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/ems_db';
         await mongoose.connect(mongoURI);
 
-        const demoRoles = ['admin', 'employee', 'hr', 'finance', 'it_admin'];
+        const demoRoles = ['admin', 'employee'];
 
         for (const role of demoRoles) {
             const email = `demo_${role}@example.com`;
