@@ -71,6 +71,48 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+
+// 🚀 TEMPORARY SEEDER ENDPOINT (FOR PRODUCTION)
+app.get('/api/auth/seed-demo', async (req, res) => {
+  try {
+    const User = require('./models/user');
+    const { getPermissionsForRole } = require('./utils/permissionConfig');
+    const demoRoles = ['admin', 'employee', 'hr', 'finance', 'it_admin'];
+    let results = [];
+
+    for (const role of demoRoles) {
+      const email = `demo_${role}@example.com`;
+      let existing = await User.findOne({ email });
+
+      if (existing) {
+        if (!existing.isDemo) {
+          existing.isDemo = true;
+          await existing.save();
+          results.push(`Updated ${email} to demo`);
+        } else {
+          results.push(`${email} already exists`);
+        }
+        continue;
+      }
+
+      const user = new User({
+        name: `Demo ${role.toUpperCase().replace('_', ' ')}`,
+        email,
+        password: 'demo123',
+        role,
+        isDemo: true,
+        permissions: getPermissionsForRole(role),
+        companyName: 'Demo Corp',
+      });
+      await user.save();
+      results.push(`Created ${email}`);
+    }
+    res.json({ message: "Seeding successful", details: results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/api/subscription', require('./routes/subscription'));
 
 // Protected & Subscription-Gated Routes
